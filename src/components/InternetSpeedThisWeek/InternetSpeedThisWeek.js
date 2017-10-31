@@ -61,7 +61,6 @@ export default class Speedtest extends Component {
       }],
       "rows": this.state.chartData,
       "options": {
-        title: 'Internet Speed Within 7 Days',
         "legend": 'none',
         hAxis: {
           title: 'Day'

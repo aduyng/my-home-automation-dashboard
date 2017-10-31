@@ -57,7 +57,6 @@ export default class Speedtest extends Component {
       "rows": this.state.chartData,
       "options": {
         "legend": 'none',
-        title: 'Power Consumption Today',
         hAxis: {title: 'Hour', minValue: 0, maxValue: 24},
         vAxis: {title: 'Watt', minValue: 0, maxValue: 3000},
         curveType: 'function'

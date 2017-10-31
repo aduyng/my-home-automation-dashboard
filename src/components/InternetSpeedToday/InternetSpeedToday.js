@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
 import {Chart} from 'react-google-charts';
-import {get, isEmpty, keys, reduce} from 'lodash';
+import {get, isEmpty, keys, map, reduce, sortBy} from 'lodash';
 import moment from 'moment';
 import firebase from '../../firebase';
 
@@ -8,7 +8,7 @@ function calculateChartData(data) {
   const start = moment().subtract('hour', 24);
   const end = moment();
 
-  return reduce(data, (memo, monthValue, month) => {
+  const rows = reduce(data, (memo, monthValue, month) => {
     return reduce(monthValue, (keep, dayValue, day) => {
       const date = moment(`${month}/${day}`, "MM/DD");
 
@@ -20,11 +20,17 @@ function calculateChartData(data) {
         const speed = reduce(hourValue, (sum, minuteValue) => {
           return sum + get(minuteValue, 'result.speeds.download', 0);
         }, 0) / keys(hourValue).length;
-        register.push([date.hour(parseInt(hour, 10)).toDate(), speed]);
+        register.push([date.clone().hour(parseInt(hour, 10)), speed]);
         return register;
       }, keep);
     }, memo);
   }, []);
+
+  const sortedRow = sortBy(rows, ([date]) => date.valueOf());
+
+  return map(sortedRow, ([date, value]) => {
+    return [[date.hour(), date.minute(), date.second()], value];
+  });
 }
 
 export default class Speedtest extends Component {
@@ -51,20 +57,22 @@ export default class Speedtest extends Component {
       return null;
     }
 
+    const columns = [{
+      "label": "Time of Day",
+      "type": "timeofday"
+    }, {
+      "label": "Download Speed (Mbps)",
+      "type": "number"
+    }];
+
+    const rows = this.state.chartData;
+
     const props = {
       "chartType": "LineChart",
-      "columns": [{
-        "label": "Hour",
-        "type": "date"
-      }, {
-        "label": "Download Speed (Mbps)",
-        "type": "number"
-      }],
-      "rows": this.state.chartData,
+      columns,
+      rows,
       "options": {
-        title: 'Internet Speed in the last 24h',
-        "legend": 'none',
-        hAxis: {title: 'Hour'},
+        legend: 'none',
         vAxis: {title: 'Mbps', minValue: 0},
         curveType: 'function'
       },
